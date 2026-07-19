@@ -12,6 +12,10 @@ let localConversationHistory = [];
 let currentSystemPrompt = null;
 let isLocalActive = false;
 
+// Where finished transcriptions are sent. Local mode sets this to sendToOllama;
+// BYOK mode injects a Claude/Groq sink via initializeByokAudioSession.
+let transcriptionSink = null;
+
 // VAD state
 let isSpeaking = false;
 let speechBuffers = [];
@@ -200,7 +204,7 @@ async function handleSpeechEnd(audioData) {
     }
 
     sendToRenderer('update-status', 'Generating response...');
-    await sendToOllama(transcription);
+    await (transcriptionSink || sendToOllama)(transcription);
 }
 
 // ── Ollama Chat ──
@@ -304,6 +308,7 @@ async function initializeLocalSession(ollamaHost, model, whisperModel, profile, 
         speechFrameCount = 0;
         resampleRemainder = Buffer.alloc(0);
         localConversationHistory = [];
+        transcriptionSink = sendToOllama;
 
         // Initialize conversation session
         initializeNewSession(profile, customPrompt);
@@ -322,6 +327,33 @@ async function initializeLocalSession(ollamaHost, model, whisperModel, profile, 
     }
 }
 
+// BYOK mode: Whisper transcription only — no Ollama. Transcriptions go to the
+// injected sink (Groq or Claude, decided by gemini.js).
+async function initializeByokAudioSession(whisperModel, sink) {
+    console.log('[LocalAI] Initializing BYOK audio session (Whisper only):', { whisperModel });
+
+    const pipeline = await loadWhisperPipeline(whisperModel);
+    if (!pipeline) {
+        return false;
+    }
+
+    // Reset VAD state
+    isSpeaking = false;
+    speechBuffers = [];
+    silenceFrameCount = 0;
+    speechFrameCount = 0;
+    resampleRemainder = Buffer.alloc(0);
+
+    ollamaClient = null;
+    ollamaModel = null;
+    localConversationHistory = [];
+    transcriptionSink = sink;
+    isLocalActive = true;
+
+    console.log('[LocalAI] BYOK audio session initialized');
+    return true;
+}
+
 function processLocalAudio(monoChunk24k) {
     if (!isLocalActive) return;
 
@@ -335,6 +367,7 @@ function processLocalAudio(monoChunk24k) {
 function closeLocalSession() {
     console.log('[LocalAI] Closing local session');
     isLocalActive = false;
+    transcriptionSink = null;
     isSpeaking = false;
     speechBuffers = [];
     silenceFrameCount = 0;
@@ -429,6 +462,7 @@ async function sendLocalImage(base64Data, prompt) {
 
 module.exports = {
     initializeLocalSession,
+    initializeByokAudioSession,
     processLocalAudio,
     closeLocalSession,
     isLocalSessionActive,
