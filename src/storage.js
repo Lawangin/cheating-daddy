@@ -297,38 +297,6 @@ function getTodayLimits() {
     return newEntry;
 }
 
-function incrementLimitCount(model) {
-    const limits = getLimits();
-    const today = getTodayDateString();
-
-    // Find or create today's entry
-    let todayEntry = limits.data.find(entry => entry.date === today);
-
-    if (!todayEntry) {
-        // Clean old entries and create new one
-        limits.data = [];
-        todayEntry = {
-            date: today,
-            flash: { count: 0 },
-            flashLite: { count: 0 }
-        };
-        limits.data.push(todayEntry);
-    } else {
-        // Clean old entries, keep only today
-        limits.data = limits.data.filter(entry => entry.date === today);
-    }
-
-    // Increment the appropriate model count
-    if (model === 'gemini-2.5-flash') {
-        todayEntry.flash.count++;
-    } else if (model === 'gemini-2.5-flash-lite') {
-        todayEntry.flashLite.count++;
-    }
-
-    setLimits(limits);
-    return todayEntry;
-}
-
 function incrementCharUsage(provider, model, charCount) {
     getTodayLimits();
 
@@ -342,20 +310,6 @@ function incrementCharUsage(provider, model, charCount) {
     }
 
     return todayEntry;
-}
-
-function getAvailableModel() {
-    const todayLimits = getTodayLimits();
-
-    // RPD limits: flash = 20, flash-lite = 20
-    // After both exhausted, fall back to flash (for paid API users)
-    if (todayLimits.flash.count < 20) {
-        return 'gemini-2.5-flash';
-    } else if (todayLimits.flashLite.count < 20) {
-        return 'gemini-2.5-flash-lite';
-    }
-
-    return 'gemini-2.5-flash'; // Default to flash for paid API users
 }
 
 function getModelForToday() {
@@ -515,8 +469,6 @@ module.exports = {
     getLimits,
     setLimits,
     getTodayLimits,
-    incrementLimitCount,
-    getAvailableModel,
     incrementCharUsage,
     getModelForToday,
 

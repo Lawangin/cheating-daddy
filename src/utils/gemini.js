@@ -2,7 +2,7 @@ const { BrowserWindow, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const { saveDebugAudio } = require('../audioUtils');
 const { getSystemPrompt } = require('./prompts');
-const { getApiKey, getGroqApiKey, incrementCharUsage, getModelForToday, getPreferences } = require('../storage');
+const { getGroqApiKey, incrementCharUsage, getModelForToday, getPreferences } = require('../storage');
 const { connectCloud, sendCloudAudio, sendCloudText, sendCloudImage, closeCloud, isCloudActive, setOnTurnComplete } = require('./cloud');
 
 // Lazy-loaded to avoid circular dependency (localai.js imports from gemini.js)
