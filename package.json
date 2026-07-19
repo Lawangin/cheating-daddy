@@ -24,6 +24,7 @@
     },
     "license": "GPL-3.0",
     "dependencies": {
+        "@anthropic-ai/sdk": "^0.112.3",
         "@google/genai": "^1.2.0",
         "@huggingface/transformers": "^3.8.1",
         "electron-squirrel-startup": "^1.0.1",
@@ -42,5 +43,13 @@
         "@electron/fuses": "^1.8.0",
         "@reforged/maker-appimage": "^5.0.0",
         "electron": "^30.0.5"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "electron",
+            "onnxruntime-node",
+            "sharp",
+            "protobufjs"
+        ]
     }
 }
