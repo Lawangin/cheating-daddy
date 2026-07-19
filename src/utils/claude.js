@@ -43,8 +43,8 @@ function buildTools() {
 }
 
 function trimHistory() {
-    if (claudeConversationHistory.length > 20) {
-        claudeConversationHistory = claudeConversationHistory.slice(-20);
+    while (claudeConversationHistory.length > 20) {
+        claudeConversationHistory.splice(0, 2);
     }
 }
 
