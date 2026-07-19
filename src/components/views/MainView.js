@@ -489,7 +489,7 @@ export class MainView extends LitElement {
         // Internal state
         _mode: { state: true },
         _token: { state: true },
-        _geminiKey: { state: true },
+        _claudeKey: { state: true },
         _groqKey: { state: true },
         _openaiKey: { state: true },
         _tokenError: { state: true },
@@ -512,7 +512,7 @@ export class MainView extends LitElement {
 
         this._mode = 'byok';
         this._token = '';
-        this._geminiKey = '';
+        this._claudeKey = '';
         this._groqKey = '';
         this._openaiKey = '';
         this._tokenError = false;
@@ -547,7 +547,7 @@ export class MainView extends LitElement {
 
             // Load keys
             this._token = creds.cloudToken || '';
-            this._geminiKey = await cheatingDaddy.storage.getApiKey().catch(() => '') || '';
+            this._claudeKey = await cheatingDaddy.storage.getApiKey().catch(() => '') || '';
             this._groqKey = await cheatingDaddy.storage.getGroqApiKey().catch(() => '') || '';
             this._openaiKey = creds.openaiKey || '';
 
@@ -703,8 +703,8 @@ export class MainView extends LitElement {
         this.requestUpdate();
     }
 
-    async _saveGeminiKey(val) {
-        this._geminiKey = val;
+    async _saveClaudeKey(val) {
+        this._claudeKey = val;
         this._keyError = false;
         await cheatingDaddy.storage.setApiKey(val);
         this.requestUpdate();
@@ -753,7 +753,7 @@ export class MainView extends LitElement {
         if (this.isInitializing) return;
 
         if (this._mode === 'byok') {
-            if (!this._geminiKey.trim()) {
+            if (!this._claudeKey.trim()) {
                 this._keyError = true;
                 this.requestUpdate();
                 return;
@@ -821,16 +821,16 @@ export class MainView extends LitElement {
     _renderByokMode() {
         return html`
             <div class="form-group">
-                <label class="form-label">Gemini API Key</label>
+                <label class="form-label">Claude API Key</label>
                 <input
                     type="password"
                     placeholder="Required"
-                    .value=${this._geminiKey}
-                    @input=${e => this._saveGeminiKey(e.target.value)}
+                    .value=${this._claudeKey}
+                    @input=${e => this._saveClaudeKey(e.target.value)}
                     class=${this._keyError ? 'error' : ''}
                 />
                 <div class="form-hint">
-                    <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get Gemini key</span>
+                    <span class="link" @click=${() => this.onExternalLink('https://platform.claude.com/settings/keys')}>Get Claude key</span>
                 </div>
             </div>
 
@@ -845,6 +845,23 @@ export class MainView extends LitElement {
                 <div class="form-hint">
                     <span class="link" @click=${() => this.onExternalLink('https://console.groq.com/keys')}>Get Groq key</span>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <div class="whisper-label-row">
+                    <label class="form-label">Whisper Model</label>
+                    ${this.whisperDownloading ? html`<div class="whisper-spinner"></div>` : ''}
+                </div>
+                <select
+                    .value=${this._whisperModel}
+                    @change=${e => this._saveWhisperModel(e.target.value)}
+                >
+                    <option value="Xenova/whisper-tiny" ?selected=${this._whisperModel === 'Xenova/whisper-tiny'}>Tiny (fastest, least accurate)</option>
+                    <option value="Xenova/whisper-base" ?selected=${this._whisperModel === 'Xenova/whisper-base'}>Base</option>
+                    <option value="Xenova/whisper-small" ?selected=${this._whisperModel === 'Xenova/whisper-small'}>Small (recommended)</option>
+                    <option value="Xenova/whisper-medium" ?selected=${this._whisperModel === 'Xenova/whisper-medium'}>Medium (most accurate, slowest)</option>
+                </select>
+                <div class="form-hint">${this.whisperDownloading ? 'Downloading model...' : 'Used to transcribe audio locally. Downloaded automatically on first use'}</div>
             </div>
 
             ${this._renderStartButton()}
