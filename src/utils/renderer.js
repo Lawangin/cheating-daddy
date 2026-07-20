@@ -208,10 +208,11 @@ async function startCapture(screenshotIntervalSeconds = 5, imageQuality = 'mediu
             // On macOS, use SystemAudioDump for audio and getDisplayMedia for screen
             console.log('Starting macOS capture with SystemAudioDump...');
 
-            // Start macOS audio capture
+            // Start macOS audio capture (best-effort — screenshots must work even if audio fails)
             const audioResult = await ipcRenderer.invoke('start-macos-audio');
             if (!audioResult.success) {
-                throw new Error('Failed to start macOS audio capture: ' + audioResult.error);
+                console.warn('macOS audio capture unavailable, continuing screen-only:', audioResult.error);
+                cheatingDaddy.setStatus('Screenshots only (audio unavailable)');
             }
 
             // Get screen capture for screenshots
